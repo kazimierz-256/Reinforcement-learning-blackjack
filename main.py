@@ -2,10 +2,6 @@ import numpy as np
 from enum import Enum, auto, List
 import plotly
 
-# jack, queen, king = 10, ace = 1 or 11
-# blackjack: ace + 10-value card gives a 50% bonus
-# https://towardsdatascience.com/playing-blackjack-using-model-free-reinforcement-learning-in-google-colab-aa2041a2c13d
-
 
 class Card(Enum):
     TWO = auto()
@@ -29,49 +25,73 @@ class Action(Enum):
 
 
 class Player:
-    class Player_Strategy:
+    class PlayerStrategy:
         @staticmethod
         def get_initial_strategy():
             raise NotImplementedError()
 
+        @staticmethod
+        def encode_deck_action_pair_to_state(deck, action):
+            raise NotImplementedError()
+
+        def get_state_after_hit(self, state):
+            raise NotImplementedError()
+
+        def get_state_after_stand(self, state):
+            raise NotImplementedError()
+
+        def get_state_value(self, state):
+            raise NotImplementedError()
+            # return value of state
+
+        def set_state_value(self, state):
+            raise NotImplementedError()
+
     def __init__(self, strategy: Player_Strategy):
         self.strategy = strategy
+        self.state_action_sequence = []
 
     @staticmethod
-    def get_initial_strategy() -> Player_Strategy:
-        return Player_Strategy.get_initial_strategy()
+    def get_initial_strategy() -> PlayerStrategy:
+        return PlayerStrategy.get_initial_strategy()
 
-    def export_strategy(self) -> Player_Strategy:
+    def export_strategy(self) -> PlayerStrategy:
         raise NotImplementedError()
 
-    def initialize_game(self, initial_card: Card):
-        raise NotImplementedError()
+    def prepare_for_new_game(self):
+        self.state_action_sequence.clear()
 
-    def add_card(self, card: Card):
-        raise NotImplementedError()
+    def get_action(self, player_cards: List[Card], dealer_card: Card, episode_no: int):
+        probability_of_random_choice = 1.0/(1 + episode_no)
 
-    def get_action(self, dealers_card: Card, episode: int):
-        probability_of_greedy_choice = 1.0-1/episode
-        if np.random.random() < probability_of_greedy_choice:
-            # act greedily
-            pass
+        state_after_hit = self.strategy.get_state_after_hit()
+        state_after_stand = self.strategy.get_state_after_stand()
+
+        hit_state_value = self.strategy.get_state_value(state_after_hit)
+        stand_state_value = self.strategy.get_state_value(state_after_stand)
+
+        player_action = Action.HIT
+        if np.random.random() < probability_of_random_choice:
+            # act randomly
+            if np.random.random() < 0.5:
+                player_action = Action.STAND
         else:
-            # do not act greedily
-            pass
+            # act greedily
+            if stand_state_value > hit_state_value:
+                player_action = Action.STAND
 
-    def end_game_and_reward_player(self, reward: float, gamma: float):
+        raise NotImplementedError()
+
+    def end_game_and_update_strategy(self, reward: float, gamma: float):
         raise NotImplementedError()
 
 
 class Dealer:
-    def __init__(self, initial_card: Card):
-        super().__init__()
-
-    def add_card(self, card: Card):
-        raise NotImplementedError()
-
-    def get_action(self):
-        raise NotImplementedError()
+    @staticmethod
+    def get_action(deck: List[Card]):
+        deck_values = Game.evaluate_nonbusting_deck_values(deck)
+        soft_17_rule_satisfied = max(deck_values) >= 17
+        return Action.HIT if soft_17_rule_satisfied else Action.STAND
 
 
 class Game:
@@ -91,6 +111,14 @@ class Game:
         Card.ACE: [1, 11],
     }
     Game.bust_from = 22
+
+    class Status(Enum):
+        PLAYER_WON = auto()
+        DEALER_WON = auto()
+        DRAW = auto()
+        STILL_PLAYING = auto()
+
+    game_status = Status.STILL_PLAYING
 
     @staticmethod
     def evaluate_deck_values(deck_of_cards: List[Card]) -> List[int]:
@@ -123,6 +151,32 @@ class Game:
     def get_possible_actions(state):
         raise NotImplementedError()
 
+    def play(self):
+        raise NotImplementedError()
+
+    def get_player_reward(self) -> float:
+        if self.game_status == Game.Status.DEALER_WON:
+            return -1.0
+        elif self.game_status == Game.Status.PLAYER_WON:
+            return 1.0
+        elif self.game_status == Game.Status.DRAW:
+            return 0.0
+        else:
+            raise Exception("The game has not yet ended.")
+
 
 if __name__ == "__main__":
-    raise NotImplementedError()
+
+    # reinforcement learning parameters
+    episode_count = 100_000
+    gamma = 0.9
+
+    # blackjack setup
+    player = Player(Player.get_initial_strategy())
+    dealer = Dealer()
+    for episode_no in range(episode_count):
+        player.prepare_for_new_game()
+        game = Game(player, dealer, episode_no)
+        game.play()
+        player_reward = game.get_player_reward()
+        player.end_game_and_update_strategy(player_reward)
