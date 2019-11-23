@@ -61,7 +61,7 @@ class Player:
     def prepare_for_new_game(self):
         self.state_action_sequence.clear()
 
-    def get_action(self, player_cards: List[Card], dealer_card: Card, episode_no: int):
+    def get_action(self, player_deck: List[Card], dealer_card: Card, episode_no: int):
         probability_of_random_choice = 1.0/(1 + episode_no)
 
         state_after_hit = self.strategy.get_state_after_hit()
@@ -151,15 +151,60 @@ class Game:
     def get_possible_actions(state):
         raise NotImplementedError()
 
-    def play(self):
-        raise NotImplementedError()
+    @staticmethod
+    def distribute_card():
+        # we assume the deck is infinite
+        return np.random.choice(Card)
 
-    def get_player_reward(self) -> float:
-        if self.game_status == Game.Status.DEALER_WON:
+    @staticmethod
+    def play(self, player: Player, dealer: Dealer, episode_no: int) -> Game.Status:
+        def is_deck_busted(deck: List[Card]):
+            return len(Game.evaluate_nonbusting_deck_values(player_deck)) == 0
+        # get a card for the dealer
+        dealer_deck = [Game.distribute_card(), Game.distribute_card()]
+        player_deck = [Game.distribute_card(), Game.distribute_card()]
+        # successively distribute cards to the player until hit or bust
+        player_deck_busted = False
+        while player.get_action(player_deck, dealer_deck[-1], episode_no) != Action.HIT:
+            player_deck.append(Game.distribute_card())
+            if is_deck_busted(player_deck):
+                player_deck_busted = True
+                break
+
+        if player_deck_busted:
+            return Game.Status.DEALER_WON
+        else:
+            # distribute cards to the dealer until hit or bust
+            dealer_deck_busted = False
+            while dealer.get_action(dealer_deck) != Action.HIT:
+                dealer_deck.append(Game.distribute_card())
+                if is_deck_busted(dealer_deck):
+                    dealer_deck_busted = True
+                    break
+
+            if dealer_deck_busted:
+                return Game.Status.PLAYER_WON
+            else:
+                player_values = Game.evaluate_nonbusting_deck_values(
+                    player_deck)
+                dealer_values = Game.evaluate_nonbusting_deck_values(
+                    dealer_deck)
+                player_minus_dealer_score = max(
+                    player_values) - max(dealer_values)
+                if player_minus_dealer_score > 0:
+                    return Game.Status.PLAYER_WON
+                elif player_minus_dealer_score < 0:
+                    return Game.Status.DEALER_WON
+                else:
+                    return Game.Status.DRAW
+
+    @staticmethod
+    def get_player_reward(status: Game.Status) -> float:
+        if status == Game.Status.DEALER_WON:
             return -1.0
-        elif self.game_status == Game.Status.PLAYER_WON:
+        elif status == Game.Status.PLAYER_WON:
             return 1.0
-        elif self.game_status == Game.Status.DRAW:
+        elif status == Game.Status.DRAW:
             return 0.0
         else:
             raise Exception("The game has not yet ended.")
@@ -169,14 +214,14 @@ if __name__ == "__main__":
 
     # reinforcement learning parameters
     episode_count = 100_000
-    gamma = 0.9
+    # also known as gamma
+    discount_factor = 0.9
 
     # blackjack setup
     player = Player(Player.get_initial_strategy())
     dealer = Dealer()
     for episode_no in range(episode_count):
         player.prepare_for_new_game()
-        game = Game(player, dealer, episode_no)
-        game.play()
-        player_reward = game.get_player_reward()
+        game_status = Game.play(player, dealer, episode_no)
+        player_reward = Game.get_player_reward(game_status)
         player.end_game_and_update_strategy(player_reward)
