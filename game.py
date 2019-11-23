@@ -1,4 +1,5 @@
 from enum import Enum, auto, List
+import numpy as np
 
 
 class Card(Enum):
@@ -64,8 +65,22 @@ class Game:
 
     @staticmethod
     def evaluate_nonbusting_deck_values(deck_of_cards: List[Card]) -> List[int]:
-        all_possible_values = Game.evaluate_deck_values(deck_of_cards)
-        return [value for value in all_possible_values if value >= Game.bust_from]
+        # for readibility this method could have called evaluate_deck_values()
+        # and then filter out the result based on whether or not the deck causes busting
+        # but for this way the deck will never exceed the limit and
+        # the value of each excess ace card will have to become 1
+        if len(deck_of_cards) == 0:
+            return 0
+        else:
+            possible_scores = {}
+            first_card = deck_of_cards[0]
+            first_card_values = Game.card_values[first_card]
+            for possible_card_value in first_card_values:
+                final_deck_value = possible_card_value + \
+                    evaluate_nonbusting_deck_values(deck_of_cards[1:])
+                if final_deck_value <= 22:
+                    possible_scores.add(final_deck_value)
+            return list(possible_scores)
 
     @staticmethod
     def is_terminal_state(player_cards, dealer_cards):
@@ -88,30 +103,36 @@ class Game:
     def play(self, player: Player, dealer: Dealer, episode_no: int) -> Game.Status:
         def is_deck_busted(deck: List[Card]):
             return len(Game.evaluate_nonbusting_deck_values(player_deck)) == 0
+
+        def get_player_deck():
+            return (player_deck.copy(), dealers_visible_card)
         # get a card for the dealer
         dealer_deck = [Game.distribute_card()]
         player_deck = []
+        dealers_visible_card = dealer_deck[-1]
+        player_deck_action_pairs = []
         # successively distribute cards to the player until they hit or bust
         player_deck_busted = False
-        while player.get_action(player_deck, dealer_deck[-1], episode_no) != Action.HIT:
+        while player_action := player.get_action(player_deck, dealers_visible_card, episode_no) == Action.HIT:
+            player_deck_action_pairs.append((get_player_deck(), player_action))
             player_deck.append(Game.distribute_card())
             if is_deck_busted(player_deck):
                 player_deck_busted = True
                 break
 
         if player_deck_busted:
-            return Game.Status.DEALER_WON
+            return Game.Status.DEALER_WON, player_deck_action_pairs
         else:
-            # distribute cards to the dealer until they hit or bust
+            # distribute cards to the dealer until they stand or bust
             dealer_deck_busted = False
-            while dealer.get_action(dealer_deck) != Action.HIT:
+            while dealer.get_action(dealer_deck) == Action.HIT:
                 dealer_deck.append(Game.distribute_card())
                 if is_deck_busted(dealer_deck):
                     dealer_deck_busted = True
                     break
 
             if dealer_deck_busted:
-                return Game.Status.PLAYER_WON
+                return Game.Status.PLAYER_WON, player_deck_action_pairs
             else:
                 player_values = Game.evaluate_nonbusting_deck_values(
                     player_deck)
@@ -120,11 +141,11 @@ class Game:
                 player_minus_dealer_score = max(
                     player_values) - max(dealer_values)
                 if player_minus_dealer_score > 0:
-                    return Game.Status.PLAYER_WON
+                    return Game.Status.PLAYER_WON, player_deck_action_pairs
                 elif player_minus_dealer_score < 0:
-                    return Game.Status.DEALER_WON
+                    return Game.Status.DEALER_WON, player_deck_action_pairs
                 else:
-                    return Game.Status.DRAW
+                    return Game.Status.DRAW, player_deck_action_pairs
 
     @staticmethod
     def get_player_reward(status: Game.Status) -> float:

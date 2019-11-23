@@ -1,4 +1,6 @@
-from game import Game, Action
+from game import Game, Action, Card
+from typing import List, Tuple
+import numpy as np
 
 
 class Player:
@@ -68,5 +70,5 @@ class Player:
 
             raise NotImplementedError()
 
-    def end_game_and_update_strategy(self, reward: float, gamma: float):
+    def end_game_and_update_strategy(self, reward: float, player_deck_action_pairs: List[Tuple[List[Card], Action]], discount_factor: float):
         raise NotImplementedError()
