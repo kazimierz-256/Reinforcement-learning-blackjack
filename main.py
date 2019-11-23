@@ -62,25 +62,34 @@ class Player:
         self.state_action_sequence.clear()
 
     def get_action(self, player_deck: List[Card], dealer_card: Card, episode_no: int):
-        probability_of_random_choice = 1.0/(1 + episode_no)
 
-        state_after_hit = self.strategy.get_state_after_hit()
-        state_after_stand = self.strategy.get_state_after_stand()
+        player_deck_values = Game.evaluate_nonbusting_deck_values(player_deck)
+        maximal_nonbusting_player_deck_value = max(player_deck_values)
 
-        hit_state_value = self.strategy.get_state_value(state_after_hit)
-        stand_state_value = self.strategy.get_state_value(state_after_stand)
-
-        player_action = Action.HIT
-        if np.random.random() < probability_of_random_choice:
-            # act randomly
-            if np.random.random() < 0.5:
-                player_action = Action.STAND
+        if maximal_nonbusting_player_deck_value <= 10:
+            # it is always disadvantageous for the player to stand when their deck score does not exceed 11
+            return Action.HIT
         else:
-            # act greedily
-            if stand_state_value > hit_state_value:
-                player_action = Action.STAND
+            probability_of_random_choice = 1.0/(1 + episode_no)
 
-        raise NotImplementedError()
+            state_after_hit = self.strategy.get_state_after_hit()
+            state_after_stand = self.strategy.get_state_after_stand()
+
+            hit_state_value = self.strategy.get_state_value(state_after_hit)
+            stand_state_value = self.strategy.get_state_value(
+                state_after_stand)
+
+            player_action = Action.HIT
+            if np.random.random() < probability_of_random_choice:
+                # act randomly
+                if np.random.random() < 0.5:
+                    player_action = Action.STAND
+            else:
+                # act greedily
+                if stand_state_value > hit_state_value:
+                    player_action = Action.STAND
+
+            raise NotImplementedError()
 
     def end_game_and_update_strategy(self, reward: float, gamma: float):
         raise NotImplementedError()
@@ -161,9 +170,9 @@ class Game:
         def is_deck_busted(deck: List[Card]):
             return len(Game.evaluate_nonbusting_deck_values(player_deck)) == 0
         # get a card for the dealer
-        dealer_deck = [Game.distribute_card(), Game.distribute_card()]
-        player_deck = [Game.distribute_card(), Game.distribute_card()]
-        # successively distribute cards to the player until hit or bust
+        dealer_deck = [Game.distribute_card()]
+        player_deck = []
+        # successively distribute cards to the player until they hit or bust
         player_deck_busted = False
         while player.get_action(player_deck, dealer_deck[-1], episode_no) != Action.HIT:
             player_deck.append(Game.distribute_card())
@@ -174,7 +183,7 @@ class Game:
         if player_deck_busted:
             return Game.Status.DEALER_WON
         else:
-            # distribute cards to the dealer until hit or bust
+            # distribute cards to the dealer until they hit or bust
             dealer_deck_busted = False
             while dealer.get_action(dealer_deck) != Action.HIT:
                 dealer_deck.append(Game.distribute_card())
