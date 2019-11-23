@@ -54,7 +54,7 @@ class Game:
         if len(deck_of_cards) == 0:
             return 0
         else:
-            possible_scores = {}
+            possible_scores = set()
             first_card = deck_of_cards[0]
             first_card_values = Game.card_values[first_card]
             for possible_card_value in first_card_values:
@@ -65,26 +65,30 @@ class Game:
 
     @staticmethod
     def evaluate_nonbusting_deck_values(deck_of_cards: List[Card]) -> List[int]:
-        # for readibility this method could have called evaluate_deck_values()
-        # and then filter out the result based on whether or not the deck causes busting
-        # but for this way the deck will never exceed the limit and
-        # the value of each excess ace card will have to become 1
+        """
+        For readibility this method could have called evaluate_deck_values()
+        and then filter out the result based on whether or not the deck causes busting
+        but for this way the deck will never exceed the limit and
+        the value of each excess ace card will have to become 1
+
+        I perfectly know that therey may be at most one usable ace at a given time
+        nevertheless the solutions I have seen on the internet use too many magic numbers
+        and they do not scale, as opposed to a mathematically appealing solution provided below
+        it is a trade-off between oversimplified logic and mathematical elegance/self-explanatory code
+        I deliberately chose to implement a mathematically appealing and self-explanatory code
+        """
         if len(deck_of_cards) == 0:
             return 0
         else:
-            possible_scores = {}
+            possible_scores = set()
             first_card = deck_of_cards[0]
             first_card_values = Game.card_values[first_card]
             for possible_card_value in first_card_values:
                 final_deck_value = possible_card_value + \
                     evaluate_nonbusting_deck_values(deck_of_cards[1:])
-                if final_deck_value <= 22:
+                if final_deck_value <= Game.bust_from:
                     possible_scores.add(final_deck_value)
             return list(possible_scores)
-
-    @staticmethod
-    def is_terminal_state(player_cards, dealer_cards):
-        raise NotImplementedError()
 
     @staticmethod
     def get_next_state_and_reward(state, action):
@@ -110,18 +114,18 @@ class Game:
         dealer_deck = [Game.distribute_card()]
         player_deck = []
         dealers_visible_card = dealer_deck[-1]
-        player_deck_action_pairs = []
+        player_visited_bare_states = []
         # successively distribute cards to the player until they hit or bust
         player_deck_busted = False
         while player_action := player.get_action(player_deck, dealers_visible_card, episode_no) == Action.HIT:
-            player_deck_action_pairs.append((get_player_deck(), player_action))
+            player_visited_bare_states.append((get_player_deck(), dealers_visible_card, player_action))
             player_deck.append(Game.distribute_card())
             if is_deck_busted(player_deck):
                 player_deck_busted = True
                 break
 
         if player_deck_busted:
-            return Game.Status.DEALER_WON, player_deck_action_pairs
+            return Game.Status.DEALER_WON, player_visited_bare_states
         else:
             # distribute cards to the dealer until they stand or bust
             dealer_deck_busted = False
@@ -132,7 +136,7 @@ class Game:
                     break
 
             if dealer_deck_busted:
-                return Game.Status.PLAYER_WON, player_deck_action_pairs
+                return Game.Status.PLAYER_WON, player_visited_bare_states
             else:
                 player_values = Game.evaluate_nonbusting_deck_values(
                     player_deck)
@@ -141,11 +145,11 @@ class Game:
                 player_minus_dealer_score = max(
                     player_values) - max(dealer_values)
                 if player_minus_dealer_score > 0:
-                    return Game.Status.PLAYER_WON, player_deck_action_pairs
+                    return Game.Status.PLAYER_WON, player_visited_bare_states
                 elif player_minus_dealer_score < 0:
-                    return Game.Status.DEALER_WON, player_deck_action_pairs
+                    return Game.Status.DEALER_WON, player_visited_bare_states
                 else:
-                    return Game.Status.DRAW, player_deck_action_pairs
+                    return Game.Status.DRAW, player_visited_bare_states
 
     @staticmethod
     def get_player_reward(status: Game.Status) -> float:
