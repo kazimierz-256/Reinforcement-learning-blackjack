@@ -28,7 +28,6 @@ class Player:
 
     def __init__(self, strategy: Player_Strategy):
         self.strategy = strategy
-        self.state_action_sequence = []
 
     @staticmethod
     def get_initial_strategy() -> PlayerStrategy:
@@ -36,9 +35,6 @@ class Player:
 
     def export_strategy(self) -> PlayerStrategy:
         raise NotImplementedError()
-
-    def prepare_for_new_game(self):
-        self.state_action_sequence.clear()
 
     def get_action(self, player_deck: List[Card], dealer_card: Card, episode_no: int):
 

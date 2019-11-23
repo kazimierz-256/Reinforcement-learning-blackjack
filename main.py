@@ -20,7 +20,6 @@ if __name__ == "__main__":
     player = Player(Player.get_initial_strategy())
     dealer = Dealer()
     for episode_no in range(episode_count):
-        player.prepare_for_new_game()
         game_status, player_deck_action_pairs = Game.play(
             player, dealer, episode_no)
         player_reward = Game.get_player_reward(game_status)
