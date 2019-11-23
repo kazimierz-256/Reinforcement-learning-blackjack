@@ -52,7 +52,7 @@ class Player:
 
     def get_action(self, dealers_card: Card, episode: int):
         probability_of_greedy_choice = 1.0-1/episode
-        if np.random.random() < probability_of_greedy:
+        if np.random.random() < probability_of_greedy_choice:
             # act greedily
             pass
         else:
