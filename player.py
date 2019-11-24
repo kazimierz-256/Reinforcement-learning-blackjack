@@ -53,12 +53,11 @@ class Player:
         dealer_card: Card
     ) -> Action:
 
-        player_nonbusting_deck_values = game_logic.evaluate_nonbusting_deck_values(
-            player_deck)
         maximal_nonbusting_player_deck_value = max(
-            player_nonbusting_deck_values)
+            game_logic.evaluate_nonbusting_deck_values(player_deck)
+        )
 
-        if maximal_nonbusting_player_deck_value <= 10:
+        if maximal_nonbusting_player_deck_value <= 11:
             # it is always disadvantageous for the player to stand when their deck score does not exceed 11
             return Action.HIT
         else:
