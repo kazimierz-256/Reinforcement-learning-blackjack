@@ -83,22 +83,28 @@ class Player:
             # yields an asymmetric solution
             # but using an inner method makes the cases symmetric and explicit
             # in the end it is a trade-off
-            def choose_player_action():
+            def choose_player_action_epsilon_greedy():
                 if np.random.random() <= probability_of_random_choice:
                     # act randomly
                     if np.random.random() <= default_probability_of_stand:
-                        player_action = Action.STAND
+                        return Action.STAND
                 else:
                     # act greedily
                     if stand_value > hit_value:
-                        player_action = Action.STAND
+                        return Action.STAND
                     elif stand_value == hit_value:
                         # break ties
                         if np.random.random() <= default_probability_of_stand:
-                            player_action = Action.STAND
+                            return Action.STAND
                 return Action.HIT
 
-            return choose_player_action()
+            def choose_player_action_randomly():
+                if np.random.random() <= default_probability_of_stand:
+                    return Action.STAND
+                else:
+                    return Action.HIT
+
+            return choose_player_action_randomly()
 
     def end_game_and_update_strategy(
         self,
