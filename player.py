@@ -39,8 +39,18 @@ class Player:
             # not needed for now
             raise NotImplementedError()
 
-    def __init__(self, strategy=None):
+    def __init__(self, strategy=None, default_probability_of_stand:int = .5):
         self.strategy = Player.Strategy() if strategy is None else strategy
+        self.default_probability_of_stand = default_probability_of_stand
+        self._probability_of_random_choice = 1E-3
+
+    @property
+    def probability_of_random_choice(self):
+        return self._probability_of_random_choice
+
+    @probability_of_random_choice.setter
+    def probability_of_random_choice(self, value):
+        self._probability_of_random_choice = value
 
     @staticmethod
     def get_initial_strategy() -> Strategy:
@@ -52,9 +62,7 @@ class Player:
     def get_action(
         self,
         player_deck: List[Card],
-        dealer_card: Card,
-        episode_no: int,
-        default_probability_of_stand: float = 0.5
+        dealer_card: Card
     ) -> Action:
 
         player_nonbusting_deck_values = game_logic.evaluate_nonbusting_deck_values(
@@ -68,7 +76,6 @@ class Player:
         else:
             # the sum of 1/k increases without bound yet the sum 1/k^2 is finite
             # which ensures convergence
-            probability_of_random_choice = 1.0/(1 + episode_no)
 
             state = Player.Strategy.convert_to_state(player_deck, dealer_card)
 
@@ -84,9 +91,9 @@ class Player:
             # but using an inner method makes the cases symmetric and explicit
             # in the end it is a trade-off
             def choose_player_action_epsilon_greedy():
-                if np.random.random() <= probability_of_random_choice:
+                if np.random.random() <= self.probability_of_random_choice:
                     # act randomly
-                    if np.random.random() <= default_probability_of_stand:
+                    if np.random.random() <= self.default_probability_of_stand:
                         return Action.STAND
                 else:
                     # act greedily
@@ -94,17 +101,17 @@ class Player:
                         return Action.STAND
                     elif stand_value == hit_value:
                         # break ties
-                        if np.random.random() <= default_probability_of_stand:
+                        if np.random.random() <= self.default_probability_of_stand:
                             return Action.STAND
                 return Action.HIT
 
             def choose_player_action_randomly():
-                if np.random.random() <= default_probability_of_stand:
+                if np.random.random() <= self.default_probability_of_stand:
                     return Action.STAND
                 else:
                     return Action.HIT
 
-            return choose_player_action_randomly()
+            return choose_player_action_epsilon_greedy()
 
     def end_game_and_update_strategy(
         self,
