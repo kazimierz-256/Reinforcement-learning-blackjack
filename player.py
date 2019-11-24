@@ -111,7 +111,7 @@ class Player:
                 else:
                     return Action.HIT
 
-            return choose_player_action_epsilon_greedy()
+            return choose_player_action_randomly()
 
     def end_game_and_update_strategy(
         self,
