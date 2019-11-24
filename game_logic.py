@@ -54,7 +54,7 @@ def distribute_card():
 
 def play(player: player.Player, episode_no: int) -> Status:
     def is_deck_busted(deck: List[Card]):
-        return len(evaluate_nonbusting_deck_values(player_deck)) == 0
+        return len(evaluate_nonbusting_deck_values(deck)) == 0
 
     # get a card for the dealer
     dealer_deck = [distribute_card()]
