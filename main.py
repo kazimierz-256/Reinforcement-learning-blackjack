@@ -1,5 +1,7 @@
 import numpy as np
+import plotly as py
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 import game_definitions
 import game_logic
@@ -10,7 +12,8 @@ import dealer
 if __name__ == "__main__":
 
     # reinforcement learning parameters
-    episode_count = 1000
+    episode_count = 10_000
+    print_status_every_n_episodes = 100
     # also known as gamma
     discount_factor = 1.0
     random_seed = 123
@@ -24,10 +27,11 @@ if __name__ == "__main__":
     player_win_count = 0
     player_win_history = []
     player_win_history_average = [0]
+    player_win_history_std = []
     # total_player_win_average = 0
     draw_count = 0
     for episode_no in range(episode_count):
-        player.probability_of_random_choice = 1E-2 #1/(1 + episode_no)
+        player.probability_of_random_choice = 1E-2  # 1/(1 + episode_no)
         game_status, player_visited_bare_states = game_logic.play(player)
         player_final_reward = game_logic.get_player_reward(game_status)
         player.end_game_and_update_strategy(
@@ -56,20 +60,38 @@ if __name__ == "__main__":
         else:
             raise Exception(f"Unexpected game state: {game_status}")
 
-        latest_ratio_average = np.average(
-            player_win_history_average[-latest_entry_count_for_summary:])
-        latest_ratio_std = np.std(
-            player_win_history_average[-latest_entry_count_for_summary:])
-        
-        # printing all lines at once in order to avoid console text flickering 
+        latest_history = player_win_history_average
+        # latest_history = player_win_history_average[-latest_entry_count_for_summary:]
+        latest_ratio_average = np.average(latest_history)
+        latest_ratio_std = np.std(latest_history)
+        player_win_history_std.append(latest_ratio_std)
+
+        # printing all lines at once in order to avoid console text flickering
         messages = [
             f"Latest {latest_entry_count_for_summary} games summary: average player wins/dealer wins: {latest_ratio_average: .5f} standard deviation: {latest_ratio_std: .3E}",
             f"Completed episodes {episode_no + 1} out of {episode_count}"
             # f"Total statistics: average player wins/dealer wins: {total_player_win_average: .5f}"
         ]
-        print("\n".join(messages))
+
+        if (episode_no+1) % print_status_every_n_episodes == 0:
+            print("\n".join(messages))
 
     print("Constructing an interactive graph, please wait for a couple of seconds.")
     x = list(range(len(player_win_history)))
-    fig = go.Figure(data=go.Scatter(x=x, y=player_win_history_average))
+
+    titles = ("Total average number of wins since the beginning", "Total standerd deviation since the beginning")
+    fig = make_subplots(rows=2, cols=1, subplot_titles=titles)
+    fig.append_trace(go.Scatter(
+        x=x,
+        y=player_win_history_average
+    ), row=1, col=1)
+    fig.update_xaxes(title_text="Number of iterations", row=1, col=1)
+    fig.update_yaxes(title_text=r"$\text{Total average ratio of player win count to casino win count } (\mu)$", row=1, col=1)
+    fig.append_trace(go.Scatter(
+        x=x,
+        y=player_win_history_std
+    ), row=2, col=1)
+    fig.update_xaxes(title_text="Number of iterations", row=2, col=1)
+    fig.update_yaxes(title_text=r"$\text{Total standerd deviation } (\sigma)$", row=2, col=1)
+    fig.update_layout(showlegend=False, title_text=f"Blackjack Reinforcement Learning algorithm summary after playing {episode_count} games")
     fig.show()
