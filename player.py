@@ -15,8 +15,7 @@ class Player:
         def convert_to_state(player_deck, dealer_card):
             player_nonbusting_deck_values = game_logic.evaluate_nonbusting_deck_values(
                 player_deck)
-            maximal_nonbusting_player_deck_value = max(
-                player_nonbusting_deck_values)
+            maximal_nonbusting_player_deck_value = max(player_nonbusting_deck_values)
             usable_ace = len(player_nonbusting_deck_values) > 1
             return (maximal_nonbusting_player_deck_value, dealer_card, usable_ace)
 
@@ -105,13 +104,7 @@ class Player:
                             return Action.STAND
                 return Action.HIT
 
-            def choose_player_action_randomly():
-                if np.random.random() <= self.default_probability_of_stand:
-                    return Action.STAND
-                else:
-                    return Action.HIT
-
-            return choose_player_action_randomly()
+            return choose_player_action_epsilon_greedy()
 
     def end_game_and_update_strategy(
         self,
