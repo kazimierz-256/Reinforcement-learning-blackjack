@@ -22,7 +22,7 @@ if __name__ == "__main__":
     for episode_no in range(episode_count):
         game_status, player_visited_bare_states = Game.play(
             player, dealer, episode_no)
-        player_reward = Game.get_player_reward(game_status)
+        player_final_reward = Game.get_player_reward(game_status)
         player.end_game_and_update_strategy(
-            player_reward, player_visited_bare_states, discount_factor)
+            player_final_reward, player_visited_bare_states, discount_factor)
         print(game_status)
