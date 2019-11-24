@@ -34,10 +34,6 @@ class Player:
             # there might not be any state saved so I use the getter method insted of checking for existance
             self.state_visit_count[(state, action)] = 1 + self.get_state_action_visit_count(state, action)
 
-        def export_strategy(self):
-            # not needed for now
-            raise NotImplementedError()
-
     def __init__(self, strategy=None, default_probability_of_stand:int = .5):
         self.strategy = Player.Strategy() if strategy is None else strategy
         self.default_probability_of_stand = default_probability_of_stand
@@ -50,13 +46,6 @@ class Player:
     @probability_of_random_choice.setter
     def probability_of_random_choice(self, value):
         self._probability_of_random_choice = value
-
-    @staticmethod
-    def get_initial_strategy() -> Strategy:
-        return Strategy.get_initial_strategy()
-
-    def export_strategy(self) -> Strategy:
-        return self.strategy.export_strategy()
 
     def get_action(
         self,
