@@ -1,9 +1,10 @@
 import numpy as np
 import plotly
 
-from game import Game
+import game_definitions
+import game_logic
 from player import Player
-from dealer import Dealer
+import dealer
 
 
 if __name__ == "__main__":
@@ -18,11 +19,10 @@ if __name__ == "__main__":
 
     # blackjack setup
     player = Player()
-    dealer = Dealer()
     for episode_no in range(episode_count):
-        game_status, player_visited_bare_states = Game.play(
-            player, dealer, episode_no)
-        player_final_reward = Game.get_player_reward(game_status)
+        game_status, player_visited_bare_states = game_logic.play(player, episode_no)
+        player_final_reward = game_logic.get_player_reward(game_status)
         player.end_game_and_update_strategy(
             player_final_reward, player_visited_bare_states, discount_factor)
-        print(game_status)
+        if game_status is not game_definitions.Status.DEALER_WON:
+            print(game_status)
