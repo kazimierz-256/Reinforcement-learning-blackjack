@@ -13,10 +13,10 @@ def evaluate_deck_values(deck_of_cards: List[Card]) -> List[int]:
         possible_scores = set()
         first_card = deck_of_cards[0]
         first_card_values = card_values[first_card]
-        for possible_card_value in first_card_values:
-            final_deck_value = possible_card_value + \
-                evaluate_deck_values(deck_of_cards[1:])
-            possible_scores.add(final_deck_value)
+        for possibe_rest_of_deck_value in evaluate_deck_values(deck_of_cards[1:]):
+            for possible_card_value in first_card_values:
+                final_deck_value = possible_card_value + possibe_rest_of_deck_value
+                possible_scores.add(final_deck_value)
         return list(possible_scores)
 
 
