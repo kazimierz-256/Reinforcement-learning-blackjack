@@ -103,8 +103,10 @@ class Player:
                         if np.random.random() <= self.default_probability_of_stand:
                             return Action.STAND
                 return Action.HIT
+            def avoid_bust():
+                return Action.STAND if maximal_nonbusting_player_deck_value >= 12 else Action.HIT
 
-            return choose_player_action_epsilon_greedy()
+            return avoid_bust()
 
     def end_game_and_update_strategy(
         self,
