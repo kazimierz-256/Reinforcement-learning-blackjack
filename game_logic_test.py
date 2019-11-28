@@ -1,16 +1,20 @@
 from game_definitions import Card
 import game_logic
-import unittest
+import pytest
 
-class TestDeckValues(unittest.TestCase):
 
-    def test_evaluate_deck_values1(self):
-        values = list(sorted(game_logic.evaluate_deck_values([Card.JACK, Card.ACE])))
-        self.assertEqual(values, [11, 21])
+@pytest.mark.parametrize("cards,reference_values", [
+    ([Card.JACK, Card.ACE], [11, 21]),
+    ([Card.JACK, Card.ACE, Card.ACE], [12, 22, 32]),
+])
+def test_evaluate_deck_values(cards, reference_values):
+    values = list(sorted(game_logic.evaluate_deck_values(cards)))
+    assert reference_values == values
 
-    def test_evaluate_deck_values2(self):
-        values = list(sorted(game_logic.evaluate_deck_values([Card.JACK, Card.ACE, Card.ACE])))
-        self.assertEqual(values, [12, 22, 32])
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.mark.parametrize("cards,reference_values", [
+    ([Card.JACK, Card.ACE, Card.ACE], [12]),
+])
+def test_evaluate_deck_values_nonbusting(cards, reference_values):
+    values = list(sorted(game_logic.evaluate_nonbusting_deck_values(cards)))
+    assert reference_values == values
