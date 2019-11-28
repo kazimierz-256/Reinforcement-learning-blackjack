@@ -42,7 +42,7 @@ def evaluate_nonbusting_deck_values(deck_of_cards: List[Card]) -> List[int]:
         for possibe_rest_of_deck_value in evaluate_nonbusting_deck_values(deck_of_cards[1:]):
             for possible_card_value in first_card_values:
                 final_deck_value = possible_card_value + possibe_rest_of_deck_value
-                if final_deck_value <= bust_from:
+                if final_deck_value < bust_from:
                     possible_scores.add(final_deck_value)
         return list(possible_scores)
 
