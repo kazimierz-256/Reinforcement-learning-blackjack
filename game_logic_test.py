@@ -1,6 +1,7 @@
 from game_definitions import Card
 import game_logic
 import pytest
+import numpy as np
 
 
 @pytest.mark.parametrize("cards, all_values, nonbusting_values", [
@@ -20,3 +21,8 @@ def test_evaluate_deck_values_busting_and_nonbusting(cards, all_values, nonbusti
     assert all_values == busting_values
     nonbusting_values = list(sorted(game_logic.evaluate_nonbusting_deck_values(cards)))
     assert nonbusting_values == nonbusting_values
+
+def test_card_distribution():
+    np.random.seed(123)
+    for _ in range(100):
+        assert game_logic.distribute_card() in Card
