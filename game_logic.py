@@ -52,24 +52,29 @@ def distribute_card():
     return np.random.choice(Card)
 
 
-def play(player: player.Player) -> Status:
+def play(player_instance: player.Player) -> Status:
     def is_deck_busted(deck: List[Card]):
         return len(evaluate_nonbusting_deck_values(deck)) == 0
 
     # get a card for the dealer
     dealer_deck = [distribute_card()]
-    player_deck = []
     dealers_visible_card = dealer_deck[-1]
+    player_deck = [distribute_card()]
     player_visited_bare_states = []
     # successively distribute cards to the player until they hit or bust
     player_deck_busted = False
-    while player_action := player.get_action(player_deck, dealers_visible_card) == Action.HIT:
-        player_visited_bare_states.append(
-            (player_deck.copy(), dealers_visible_card, player_action))
+    while (player_action := player_instance.get_action(player_deck, dealers_visible_card)) == Action.HIT:
+        state = player.Player.Strategy.convert_to_state(player_deck, dealers_visible_card)
+        player_instance.strategy.increment_state_action_explore_counter(state, player_action)
+        player_visited_bare_states.append((state, player_action))
         player_deck.append(distribute_card())
         if is_deck_busted(player_deck):
             player_deck_busted = True
             break
+    else:
+        state = player.Player.Strategy.convert_to_state(player_deck, dealers_visible_card)
+        player_visited_bare_states.append((state, player_action))
+        player_instance.strategy.increment_state_action_explore_counter(state, player_action)
 
     if player_deck_busted:
         return Status.DEALER_WON, player_visited_bare_states
