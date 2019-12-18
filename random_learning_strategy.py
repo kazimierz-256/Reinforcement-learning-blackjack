@@ -9,7 +9,12 @@ import environment_model
 
 class Random_learning_strategy(strategy.Strategy):
     
-    def __init__(self, environment_model: environment_model.EnvironmentModel, probability_of_random_choice: float, default_probability_of_stand: float):
+    def __init__(
+            self,
+            environment_model: environment_model.EnvironmentModel,
+            probability_of_random_choice: float,
+            default_probability_of_stand: float
+            ):
         super().__init__()
         self.environment_model = environment_model
 
