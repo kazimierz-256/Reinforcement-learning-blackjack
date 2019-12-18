@@ -1,17 +1,19 @@
-from game_definitions import Card, Action
-import game_logic
-import player
 import pytest
+
+import environment_model
+import game_definitions
+import random_learning_strategy
 
 
 @pytest.mark.parametrize("player_deck, dealer_card", [
-    ([Card.ACE], Card.EIGHT),
-    ([Card.TWO, Card.NINE], Card.ACE),
-    ([Card.TWO, Card.THREE], Card.ACE),
-    ([], Card.JACK),
-    ([Card.KING], Card.TWO),
+    ([game_definitions.Card.ACE], game_definitions.Card.EIGHT),
+    ([game_definitions.Card.TWO, game_definitions.Card.NINE], game_definitions.Card.ACE),
+    ([game_definitions.Card.TWO, game_definitions.Card.THREE], game_definitions.Card.ACE),
+    ([], game_definitions.Card.JACK),
+    ([game_definitions.Card.KING], game_definitions.Card.TWO),
 ])
 def test_player_action_when_small_sum(player_deck, dealer_card):
-    player_instance = player.Player()
+    em = environment_model.EnvironmentModel()
+    learning_strategy = random_learning_strategy.Random_learning_strategy(environment_model=em)
     # deck_sum = game_logic.evaluate_nonbusting_deck_values(player_deck)
-    assert Action.HIT == player_instance.get_action(player_deck, dealer_card)
+    assert game_definitions.Action.HIT == learning_strategy.take_action(player_deck, dealer_card)
