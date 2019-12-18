@@ -31,7 +31,11 @@ if __name__ == "__main__":
 
             # initial setup
             player_environment_model = environment_model.EnvironmentModel()
-            player_strategy = random_learning_strategy.Random_learning_strategy(environment_model=player_environment_model)
+            player_strategy = random_learning_strategy.Random_learning_strategy(
+                environment_model=player_environment_model,
+                probability_of_random_choice=probability_of_random_choice,
+                default_probability_of_stand=default_probability_of_stand
+                )
             player_instance = player.Player(strategy=player_strategy)
             dealer_win_count = 0
             player_win_count = 0
