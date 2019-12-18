@@ -14,6 +14,10 @@ import random_learning_strategy
 ])
 def test_player_action_when_small_sum(player_deck, dealer_card):
     em = environment_model.EnvironmentModel()
-    learning_strategy = random_learning_strategy.Random_learning_strategy(environment_model=em)
+    learning_strategy = random_learning_strategy.Random_learning_strategy(
+        environment_model=em,
+        probability_of_random_choice=.5,
+        default_probability_of_stand=.5
+        )
     # deck_sum = game_logic.evaluate_nonbusting_deck_values(player_deck)
     assert game_definitions.Action.HIT == learning_strategy.take_action(player_deck, dealer_card)
