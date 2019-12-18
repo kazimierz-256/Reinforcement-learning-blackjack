@@ -7,11 +7,16 @@ import game_logic
 import game_definitions
 import environment_model
 
-class Random_learning_strategy(strategy.Strategy):
+class Random_fixed_strategy(strategy.Strategy):
     
-    def __init__(self, environment_model: environment_model.EnvironmentModel, probability_of_random_choice: float, default_probability_of_stand: float):
+    def __init__(
+            self,
+            environment_model: environment_model.EnvironmentModel,
+            default_probability_of_stand: float
+            ):
         super().__init__()
         self.environment_model = environment_model
+        self.default_probability_of_stand = default_probability_of_stand
 
     @property
     def environment_model(self):
@@ -45,20 +50,17 @@ class Random_learning_strategy(strategy.Strategy):
             stand_value = self.environment_model.get_state_action_value(
                 state, game_definitions.Action.STAND)
 
-            if np.random.random() <= self.probability_of_random_choice:
-                # act randomly
+            # act greedily
+            if stand_value > hit_value:
+                return game_definitions.Action.STAND
+            elif stand_value == hit_value:
+                # break ties
                 if np.random.random() <= self.default_probability_of_stand:
                     return game_definitions.Action.STAND
-            else:
-                # act greedily
-                if stand_value > hit_value:
-                    return game_definitions.Action.STAND
-                elif stand_value == hit_value:
-                    # break ties
-                    if np.random.random() <= self.default_probability_of_stand:
-                        return game_definitions.Action.STAND
             return game_definitions.Action.HIT
-                
+
+        # avoiding bust strategy
+        # return game_definitions.Action.STAND if maximal_nonbusting_player_deck_value >= 12 else game_definitions.Action.HIT
 
     def game_finished(
         self,
