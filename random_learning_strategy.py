@@ -71,7 +71,8 @@ class Random_learning_strategy(strategy.Strategy):
         self,
         final_reward: float,
         player_visited_bare_states: List[Tuple[int, int, game_definitions.Action]],
-        discount_factor: float
+        discount_factor: float,
+        learning_rate: float
         ):
         # assuming discount factor belongs to the terminal state which is not included in player's environment_model
         discounted_reward = final_reward
@@ -79,7 +80,7 @@ class Random_learning_strategy(strategy.Strategy):
 
             state_value = self.environment_model.get_state_action_value(state, action)
             visit_count = 1 + self.environment_model.get_state_action_visit_count(state, action)
-            new_state_value = state_value + (discounted_reward - state_value) / visit_count
+            new_state_value = (1 - learning_rate) * state_value + learning_rate * (discounted_reward - state_value)
             self.environment_model.set_state_action_value(state, action, new_state_value)
             self.environment_model.increment_state_action_visit_counter(state, action)
             # there are no intermediate rewards, so the discounting process is simplified
