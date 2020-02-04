@@ -27,6 +27,12 @@ class Player:
         self,
         final_reward: float,
         player_visited_bare_states: List[Tuple[int, int, Action]],
-        discount_factor: float
+        discount_factor: float,
+        learning_rate: float
     ):
-        self.strategy.game_finished(final_reward, player_visited_bare_states, discount_factor)
+        self.strategy.game_finished(
+            final_reward,
+            player_visited_bare_states,
+            discount_factor,
+            learning_rate
+            )
