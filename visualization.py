@@ -8,7 +8,12 @@ import game_definitions
 import player
 import environment_model
 
-def draw_figure(player_win_history, player_win_history_average, player_win_history_std):
+def draw_figure(
+    player_win_history,
+    player_win_history_average,
+    player_win_history_std,
+    episode_count
+    ):
     # figure drawing part
     print("Constructing an interactive graph, please wait for a couple of seconds.")
     x = list(range(len(player_win_history)))
