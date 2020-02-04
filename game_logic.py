@@ -24,12 +24,12 @@ def evaluate_deck_values(deck_of_cards: List[game_definitions.Card]) -> List[int
 
 def evaluate_nonbusting_deck_values(deck_of_cards: List[game_definitions.Card]) -> List[int]:
     """
-    For readibility this method could have called evaluate_deck_values()
+    For readability this method could have called evaluate_deck_values()
     and then filter out the result based on whether or not the deck causes busting
     but for this way the deck will never exceed the limit and
     the value of each excess ace card will have to become 1
 
-    I perfectly know that therey may be at most one usable ace at a given time
+    I perfectly know that there may be at most one usable ace at a given time
     nevertheless the solutions I have seen on the internet use too many magic numbers
     and they do not scale, as opposed to a mathematically appealing solution provided below
     it is a trade-off between oversimplified logic and mathematical elegance/self-explanatory code
